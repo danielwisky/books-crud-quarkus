@@ -1,4 +1,9 @@
-# books Project
+# CRUD Books
+
+![](https://img.shields.io/badge/Author-Daniel%20Wisky-brightgreen)
+![](https://img.shields.io/badge/Language-Java-brightgreen)
+![](https://img.shields.io/badge/Framework-Quarkus-brightgreen)
+![](https://img.shields.io/badge/Architecture-Clean%20Arch-brightgreen)
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
