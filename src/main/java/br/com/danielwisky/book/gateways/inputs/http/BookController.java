@@ -1,14 +1,19 @@
 package br.com.danielwisky.book.gateways.inputs.http;
 
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import br.com.danielwisky.book.domains.Book;
+import br.com.danielwisky.book.domains.BookFilter;
+import br.com.danielwisky.book.domains.Page;
 import br.com.danielwisky.book.domains.exceptions.ResourceNotFoundException;
 import br.com.danielwisky.book.gateways.inputs.http.resources.request.BookRequest;
 import br.com.danielwisky.book.gateways.inputs.http.resources.response.BookResponse;
+import br.com.danielwisky.book.gateways.inputs.http.resources.response.PageResponse;
 import br.com.danielwisky.book.usecases.CreateBook;
 import br.com.danielwisky.book.usecases.DeleteBook;
 import br.com.danielwisky.book.usecases.FindBook;
+import br.com.danielwisky.book.usecases.SearchBooks;
 import br.com.danielwisky.book.usecases.UpdateBook;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -20,6 +25,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Path("/api/v1/books")
@@ -38,6 +44,9 @@ public class BookController {
 
   @Inject
   private FindBook findBook;
+
+  @Inject
+  private SearchBooks searchBooks;
 
   @POST
   public Response create(@Valid final BookRequest bookRequest) {
@@ -66,8 +75,22 @@ public class BookController {
   }
 
   @GET
-  public Response list() {
+  public PageResponse<BookResponse> search(
+      @QueryParam("title") final String title,
+      @QueryParam("author") final String author,
+      @QueryParam("page") final Integer pageNumber,
+      @QueryParam("size") final Integer pageSize) {
 
+    final BookFilter filter = BookFilter.builder()
+        .title(title).author(author).page(pageNumber).size(pageSize).build();
+    final Page<Book> pageResult = searchBooks.execute(filter);
+    return new PageResponse<>(
+        pageResult.getContent().stream().map(BookResponse::new).collect(toList()),
+        pageResult.getPage(),
+        pageResult.getSize(),
+        pageResult.getTotalElements(),
+        pageResult.getTotalPages()
+    );
   }
 
   @GET
