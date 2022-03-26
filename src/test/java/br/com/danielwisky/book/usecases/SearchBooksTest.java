@@ -10,7 +10,6 @@ import br.com.danielwisky.book.gateways.BookDataGateway;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectMock;
 import javax.inject.Inject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
