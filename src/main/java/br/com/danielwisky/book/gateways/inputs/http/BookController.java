@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -78,8 +79,8 @@ public class BookController {
   public PageResponse<BookResponse> search(
       @QueryParam("title") final String title,
       @QueryParam("author") final String author,
-      @QueryParam("page") final Integer pageNumber,
-      @QueryParam("size") final Integer pageSize) {
+      @DefaultValue("0") @QueryParam("page") final Integer pageNumber,
+      @DefaultValue("20") @QueryParam("size") final Integer pageSize) {
 
     final BookFilter filter = BookFilter.builder()
         .title(title).author(author).page(pageNumber).size(pageSize).build();

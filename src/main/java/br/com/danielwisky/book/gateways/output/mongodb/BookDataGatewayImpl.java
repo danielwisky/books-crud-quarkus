@@ -8,19 +8,33 @@ import br.com.danielwisky.book.domains.Page;
 import br.com.danielwisky.book.gateways.BookDataGateway;
 import br.com.danielwisky.book.gateways.output.mongodb.documents.BookDocument;
 import br.com.danielwisky.book.gateways.output.mongodb.repositories.BookDocumentRepository;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Filters;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import org.bson.BsonDocument;
+import org.bson.BsonDocumentReader;
+import org.bson.Document;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.DocumentCodec;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 @ApplicationScoped
 public class BookDataGatewayImpl implements BookDataGateway {
 
-  private static final String QUERY_SEARCH = "{ 'title': new RegExp(?1), 'author': new RegExp(?2) } }";
-
   @Inject
   private BookDocumentRepository bookDocumentRepository;
+
+  public static Document toDocument(final BsonDocument bsonDocument) {
+    final DocumentCodec codec = new DocumentCodec();
+    final DecoderContext decoderContext = DecoderContext.builder().build();
+    return codec.decode(new BsonDocumentReader(bsonDocument), decoderContext);
+  }
 
   @Override
   public Book save(final Book book) {
@@ -42,12 +56,19 @@ public class BookDataGatewayImpl implements BookDataGateway {
   @Override
   public Page<Book> search(final BookFilter filter) {
 
-    long totalBooks = bookDocumentRepository.count(
-        QUERY_SEARCH, filter.getTitle(), filter.getAuthor());
+    final List<Bson> filters = new ArrayList<>();
+    filters.add(Filters.ne("_id", null));
+    addRegexIfNotNull(filters, "title", filter.getTitle());
+    addRegexIfNotNull(filters, "author", filter.getAuthor());
+
+    final Document query = toDocument(Filters.and(filters.toArray(new Bson[0]))
+        .toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry()));
+
+    long totalBooks = bookDocumentRepository.count(query);
     int totalPages = totalBooks == 0 ? 0 : (int) Math.ceil(totalBooks / filter.getSize());
 
     final List<Book> books =
-        bookDocumentRepository.find(QUERY_SEARCH, filter.getTitle(), filter.getAuthor())
+        bookDocumentRepository.find(query)
             .page(filter.getPage(), filter.getSize())
             .stream()
             .map(BookDocument::toDomain)
@@ -56,4 +77,9 @@ public class BookDataGatewayImpl implements BookDataGateway {
     return new Page(books, filter.getPage(), filter.getSize(), totalBooks, totalPages);
   }
 
+  private void addRegexIfNotNull(final List<Bson> filters, final String field, final String value) {
+    if (Objects.nonNull(value)) {
+      filters.add(Filters.regex(field, value));
+    }
+  }
 }
