@@ -30,12 +30,6 @@ public class BookDataGatewayImpl implements BookDataGateway {
   @Inject
   private BookDocumentRepository bookDocumentRepository;
 
-  public static Document toDocument(final BsonDocument bsonDocument) {
-    final DocumentCodec codec = new DocumentCodec();
-    final DecoderContext decoderContext = DecoderContext.builder().build();
-    return codec.decode(new BsonDocumentReader(bsonDocument), decoderContext);
-  }
-
   @Override
   public Book save(final Book book) {
     final BookDocument bookDocument = new BookDocument(book);
@@ -75,6 +69,12 @@ public class BookDataGatewayImpl implements BookDataGateway {
             .collect(toList());
 
     return new Page(books, filter.getPage(), filter.getSize(), totalBooks, totalPages);
+  }
+
+  private Document toDocument(final BsonDocument bsonDocument) {
+    final DocumentCodec codec = new DocumentCodec();
+    final DecoderContext decoderContext = DecoderContext.builder().build();
+    return codec.decode(new BsonDocumentReader(bsonDocument), decoderContext);
   }
 
   private void addRegexIfNotNull(final List<Bson> filters, final String field, final String value) {
