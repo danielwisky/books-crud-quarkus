@@ -16,7 +16,7 @@ public class UpdateBook {
     final Book bookData = bookDataGateway.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException());
 
-    book.setId(book.getId());
+    book.setId(bookData.getId());
     return bookDataGateway.save(book);
   }
 }
